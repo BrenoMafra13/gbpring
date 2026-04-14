@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CS Webring</title>
+
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <script>
+    const webringData = { sites: [] };
+    const GOAL = 200;
+  </script>
+
+  <script src="./javascript/d3-ring.js"></script>
+</head>
+
+<body>
+  <div class="layout">
+
+    <div class="left-panel">
+
+      <div class="logo-area">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/George_Brown_College_logo.svg/200px-George_Brown_College_logo.svg.png" alt="GBP Logo" />
+        <div class="logo-text">
+          <span class="logo-title">CS Webring</span>
+          <span class="logo-sub">George Brown Polytechnic</span>
+        </div>
+      </div>
+
+      <p class="welcome-text">
+        If you've studied any CS course at
+        <a href="https://georgebrown.ca" target="_blank">George Brown Polytechnic</a>,
+        add yourself to the ring by submitting a
+        <a href="#" target="_blank">pull request</a>.
+      </p>
+
+      <div class="goal-tracker">
+        <div class="goal-info">
+          <div class="goal-text">
+            <span id="goal-count">0</span> / <span id="goal-target">200</span> students
+          </div>
+          <div class="goal-bar">
+            <div class="goal-fill" id="goal-fill"></div>
+          </div>
+          <div class="goal-label">Help us fill the maple leaf</div>
+        </div>
+        <button class="goal-preview-btn" id="goal-preview-btn">Preview</button>
+      </div>
+
+      <div class="modal-overlay" id="goal-modal">
+        <div class="modal-content">
+          <button class="modal-close" id="modal-close">&times;</button>
+          <img src="./assets/image.png" alt="200 students forming a maple leaf" />
+        </div>
+      </div>
+
+      <div class="search-box">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search" placeholder="Search by name, year or url..." />
+      </div>
+
+      <div class="students-header">Members</div>
+      <div class="student-list" id="student-list"></div>
+
+    </div>
+
+    <div class="right-panel">
+      <div class="dev-team">
+        <span class="dev-team-label">Dev team:</span>
+        <button class="dev-team-link" data-dev="arash">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Arash Shalchian
+        </button>
+        <button class="dev-team-link" data-dev="vy">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Vy Nguyen
+        </button>
+      </div>
+      <div class="chart-box">
+        <div id="chart-container"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal-overlay" id="dev-modal">
+    <div class="modal-content dev-modal-card">
+      <button class="modal-close" id="dev-modal-close">&times;</button>
+      <div class="dev-modal-avatar" id="dev-modal-avatar"></div>
+      <div class="dev-modal-name" id="dev-modal-name"></div>
+      <div class="dev-modal-role" id="dev-modal-role"></div>
+      <p class="dev-modal-bio" id="dev-modal-bio"></p>
+      <div class="dev-modal-links" id="dev-modal-links"></div>
+    </div>
+  </div>
+
+  <script>
+    const devProfiles = {
+      arash: {
+        name: "Arash Shalchian",
+        initial: "A",
+        role: "Developer",
+        bio: "CS student at George Brown Polytechnic (Class of 2026). Built this webring to connect GBP's CS community and give students a reason to ship their portfolios.",
+        website: "https://shalchian.dev",
+        github: "https://github.com/A-Shalchian"
+      },
+      vy: {
+        name: "Vy Nguyen",
+        initial: "V",
+        role: "Developer",
+        bio: "Coming soon.",
+        website: "https://vy-software-dev.vercel.app",
+        github: ""
+      }
+    };
+
+    function openDevModal(key) {
+      const dev = devProfiles[key];
+      if (!dev) return;
+      document.getElementById('dev-modal-avatar').textContent = dev.initial;
+      document.getElementById('dev-modal-name').textContent = dev.name;
+      document.getElementById('dev-modal-role').textContent = dev.role;
+      document.getElementById('dev-modal-bio').textContent = dev.bio;
+
+      const linksEl = document.getElementById('dev-modal-links');
+      linksEl.innerHTML = '';
+      if (dev.website) {
+        const a = document.createElement('a');
+        a.href = dev.website;
+        a.target = '_blank';
+        a.textContent = dev.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        a.className = 'dev-modal-link';
+        linksEl.appendChild(a);
+      }
+      if (dev.github) {
+        const a = document.createElement('a');
+        a.href = dev.github;
+        a.target = '_blank';
+        a.textContent = 'GitHub';
+        a.className = 'dev-modal-link';
+        linksEl.appendChild(a);
+      }
+
+      document.getElementById('dev-modal').classList.add('active');
+    }
+
+    function renderStudents(filter) {
+      const list = document.getElementById('student-list');
+      list.innerHTML = '';
+      const term = (filter || '').toLowerCase();
+
+      webringData.sites.forEach(site => {
+        const matches = !term ||
+          site.name.toLowerCase().includes(term) ||
+          site.year.toString().includes(term) ||
+          site.website.toLowerCase().includes(term);
+
+        if (!matches) return;
+
+        const url = site.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+        const a = document.createElement('a');
+        a.href = site.website;
+        a.target = '_blank';
+        a.className = 'student-item';
+
+        a.innerHTML = `
+          <span class="student-name">${site.name}</span>
+          <span class="student-year">${site.year}</span>
+          <span class="student-url">${url}</span>
+        `;
+
+        list.appendChild(a);
+      });
+    }
+
+    function updateGoal() {
+      const count = webringData.sites.length;
+      document.getElementById('goal-count').textContent = count;
+      document.getElementById('goal-target').textContent = GOAL;
+      const pct = Math.min((count / GOAL) * 100, 100);
+      document.getElementById('goal-fill').style.width = pct + '%';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('./sites.json')
+        .then(r => r.json())
+        .then(data => {
+          webringData.sites = data;
+          renderStudents();
+          updateGoal();
+          initVisualization();
+        });
+
+      const searchInput = document.getElementById('search');
+      searchInput.addEventListener('input', e => renderStudents(e.target.value));
+
+      document.querySelectorAll('[data-dev]').forEach(btn => {
+        btn.addEventListener('click', () => openDevModal(btn.dataset.dev));
+      });
+      const devModal = document.getElementById('dev-modal');
+      document.getElementById('dev-modal-close').addEventListener('click', () => devModal.classList.remove('active'));
+      devModal.addEventListener('click', (e) => { if (e.target === devModal) devModal.classList.remove('active'); });
+
+      const modal = document.getElementById('goal-modal');
+      document.getElementById('goal-preview-btn').addEventListener('click', () => modal.classList.add('active'));
+      document.getElementById('modal-close').addEventListener('click', () => modal.classList.remove('active'));
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+    });
+  </script>
+</body>
+
+</html>
